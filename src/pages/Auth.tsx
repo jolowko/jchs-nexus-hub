@@ -51,19 +51,28 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gold-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-navy-600 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-accent rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8 animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <GraduationCap className="h-12 w-12 text-accent" />
+            <GraduationCap className="h-16 w-16 text-gold-500 drop-shadow-gold animate-scale-in" />
           </div>
-          <h1 className="text-4xl font-bold text-primary-foreground mb-2">JCHS NEXUS</h1>
-          <p className="text-muted-foreground text-primary-foreground/80">Your Premium School Platform</p>
+          <h1 className="text-5xl font-bold mb-2 bg-gradient-gold bg-clip-text text-transparent">
+            JCHS NEXUS
+          </h1>
+          <p className="text-gold-200 text-lg">Your Premium School Platform</p>
         </div>
 
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-elegant border-gold-500/20 backdrop-blur-sm bg-card/95 animate-scale-in">
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to access your account</CardDescription>
           </CardHeader>
           <CardContent>
