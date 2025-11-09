@@ -10,6 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Heart, MessageCircle, Upload } from "lucide-react";
+import { z } from "zod";
+
+const homeworkSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
+  description: z.string().trim().min(1, "Description is required").max(5000, "Description must be less than 5000 characters"),
+});
 
 interface HomeworkPost {
   id: string;
@@ -58,12 +64,20 @@ export default function Homework() {
     
     if (!user) return;
 
+    // Validate input
+    const validation = homeworkSchema.safeParse({ title, description });
+    if (!validation.success) {
+      const errorMessage = validation.error.errors[0]?.message || "Invalid input";
+      toast.error(errorMessage);
+      return;
+    }
+
     const { error } = await supabase
       .from("homework_posts")
       .insert({
         user_id: user.id,
-        title,
-        description,
+        title: validation.data.title,
+        description: validation.data.description,
       });
 
     if (error) {
@@ -123,15 +137,17 @@ export default function Homework() {
             <CardContent>
               <form onSubmit={createPost} className="space-y-4">
                 <Input
-                  placeholder="Title"
+                  placeholder="Title (max 200 characters)"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  maxLength={200}
                   required
                 />
                 <Textarea
-                  placeholder="Description"
+                  placeholder="Description (max 5000 characters)"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  maxLength={5000}
                   required
                   rows={4}
                 />

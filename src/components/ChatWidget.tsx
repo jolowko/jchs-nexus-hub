@@ -7,6 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+
+const chatMessageSchema = z.object({
+  content: z.string().trim().min(1, "Message cannot be empty").max(1000, "Message must be less than 1000 characters"),
+});
 
 interface Message {
   id: string;
@@ -125,13 +130,21 @@ export default function ChatWidget() {
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!message.trim() || !user) return;
+    if (!user) return;
+
+    // Validate input
+    const validation = chatMessageSchema.safeParse({ content: message });
+    if (!validation.success) {
+      const errorMessage = validation.error.errors[0]?.message || "Invalid message";
+      toast.error(errorMessage);
+      return;
+    }
 
     const { error } = await supabase
       .from("chat_messages")
       .insert({
         user_id: user.id,
-        content: message.trim(),
+        content: validation.data.content,
         is_global: true,
       });
 
@@ -188,7 +201,8 @@ export default function ChatWidget() {
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
+              placeholder="Type a message (max 1000 chars)..."
+              maxLength={1000}
               className="flex-1"
             />
             <Button type="submit" size="icon" disabled={!message.trim()}>

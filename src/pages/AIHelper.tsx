@@ -9,6 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Brain, Send } from "lucide-react";
+import { z } from "zod";
+
+const aiQuestionSchema = z.object({
+  question: z.string().trim().min(1, "Question is required").max(2000, "Question must be less than 2000 characters"),
+});
 
 export default function AIHelper() {
   const { user, isSubscribed, loading } = useAuth();
@@ -26,14 +31,20 @@ export default function AIHelper() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!question.trim()) return;
+    // Validate input
+    const validation = aiQuestionSchema.safeParse({ question });
+    if (!validation.success) {
+      const errorMessage = validation.error.errors[0]?.message || "Invalid question";
+      toast.error(errorMessage);
+      return;
+    }
 
     setIsLoading(true);
     setAnswer("");
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-helper", {
-        body: { question },
+        body: { question: validation.data.question },
       });
 
       if (error) throw error;
@@ -71,9 +82,10 @@ export default function AIHelper() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Textarea
-                placeholder="Type your homework question here..."
+                placeholder="Type your homework question here (max 2000 chars)..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
+                maxLength={2000}
                 rows={6}
                 disabled={isLoading}
               />
