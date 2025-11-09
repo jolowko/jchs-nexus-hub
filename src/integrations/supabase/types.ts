@@ -226,6 +226,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_admin_access: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

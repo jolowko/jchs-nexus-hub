@@ -66,9 +66,12 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Error creating checkout:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: "An error occurred processing your request. Please try again." }), 
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });

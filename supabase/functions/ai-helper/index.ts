@@ -89,9 +89,12 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Error in ai-helper:", error);
-    return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "An error occurred processing your request. Please try again." }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });
