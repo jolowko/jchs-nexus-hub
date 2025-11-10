@@ -71,12 +71,12 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-grey-light via-background to-maroon-light/20">
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-12 text-center animate-fade-in">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-gold bg-clip-text text-transparent animate-scale-in">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent animate-scale-in">
             Welcome to JCHS NEXUS
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -90,15 +90,15 @@ export default function Dashboard() {
             return (
               <Link key={feature.to} to={feature.to}>
                 <Card 
-                  className="hover:shadow-elegant hover:scale-105 hover:border-gold-500/40 transition-all duration-300 cursor-pointer h-full border-border/40 bg-card/95 backdrop-blur-sm group animate-fade-in"
+                  className="hover:shadow-maroon hover:scale-105 hover:border-maroon-accent/40 transition-all duration-300 cursor-pointer h-full border-maroon-accent/20 bg-gradient-card backdrop-blur-sm group animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="p-3 bg-gradient-to-br from-gold-500/20 to-navy-600/20 rounded-xl group-hover:from-gold-500/30 group-hover:to-navy-600/30 transition-all duration-300 group-hover:animate-pulse">
+                      <div className="p-3 bg-gradient-maroon/10 rounded-xl group-hover:bg-gradient-maroon/20 transition-all duration-300 shadow-sm">
                         <Icon className={`h-8 w-8 ${feature.color} group-hover:scale-110 transition-transform duration-300`} />
                       </div>
-                      <CardTitle className="text-xl group-hover:text-gold-500 transition-colors duration-300">
+                      <CardTitle className="text-xl text-maroon-dark group-hover:text-maroon-accent transition-colors duration-300">
                         {feature.title}
                       </CardTitle>
                     </div>

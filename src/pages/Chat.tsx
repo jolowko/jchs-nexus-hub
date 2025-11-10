@@ -60,7 +60,7 @@ export default function Chat() {
       const response: any = await supabase
         .from("chat_messages")
         .select("id, content, created_at, user_id")
-        .eq("room", "global")
+        .eq("is_global", true)
         .order("created_at", { ascending: true })
         .limit(100);
 
@@ -103,7 +103,7 @@ export default function Chat() {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
-          filter: "room=eq.global",
+          filter: "is_global=eq.true",
         },
         async (payload: any) => {
           const profileResponse: any = await supabase
@@ -145,7 +145,7 @@ export default function Chat() {
     const response: any = await supabase.from("chat_messages").insert({
       content: message,
       user_id: user.id,
-      room: "global",
+      is_global: true,
     });
 
     if (response.error) {
@@ -159,13 +159,13 @@ export default function Chat() {
   if (loading || !user || !isSubscribed) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-grey-dark via-maroon-dark to-grey-dark">
       <Navigation />
       <main className="container mx-auto px-4 py-8 max-w-5xl">
-        <Card className="bg-card/95 backdrop-blur-sm border-gold-500/20 shadow-elegant h-[calc(100vh-12rem)] flex flex-col">
-          <CardHeader className="border-b border-border/40">
+        <Card className="bg-card/95 backdrop-blur-sm border-maroon-accent/30 shadow-maroon h-[calc(100vh-12rem)] flex flex-col">
+          <CardHeader className="border-b border-border/40 bg-gradient-primary">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl bg-gradient-gold bg-clip-text text-transparent">
+              <CardTitle className="text-2xl text-primary-foreground">
                 Global Chat
               </CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -183,11 +183,11 @@ export default function Chat() {
                 <div
                   className={`max-w-[70%] rounded-lg p-3 ${
                     msg.user_id === user?.id
-                      ? "bg-gradient-to-br from-gold-500/20 to-navy-600/20 border border-gold-500/30"
+                      ? "bg-gradient-maroon border border-maroon-accent/50"
                       : "bg-secondary/50 border border-border/40"
                   }`}
                 >
-                  <p className="text-xs font-semibold mb-1 text-gold-500">
+                  <p className="text-xs font-semibold mb-1 text-maroon-accent">
                     {msg.profile.username}
                   </p>
                   <p className="text-sm text-foreground break-words">{msg.content}</p>
@@ -208,7 +208,7 @@ export default function Chat() {
               <Button
                 type="submit"
                 disabled={!message.trim()}
-                className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700"
+                className="bg-gradient-maroon hover:opacity-90"
               >
                 <Send className="h-4 w-4" />
               </Button>

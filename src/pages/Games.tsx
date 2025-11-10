@@ -79,28 +79,28 @@ export default function Games() {
   if (loading || !user || !isSubscribed) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-grey-light via-background to-maroon-light/20">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-gold bg-clip-text text-transparent">
-              Games Portal
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+              Games Hub
             </h1>
-            <p className="text-muted-foreground">Take a break and play some games!</p>
+            <p className="text-muted-foreground">Take a break and have some fun</p>
           </div>
           {isAdmin && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700">
+                <Button className="bg-gradient-maroon hover:opacity-90 shadow-maroon">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Game
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-gold-500/20">
+              <DialogContent className="bg-card border-maroon-accent/20">
                 <DialogHeader>
                   <DialogTitle>Add New Game</DialogTitle>
-                  <DialogDescription>Add a new game to the portal</DialogDescription>
+                  <DialogDescription>Add a new game to the hub</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAddGame} className="space-y-4">
                   <div>
@@ -119,7 +119,7 @@ export default function Games() {
                     <Label htmlFor="thumbnail_url">Thumbnail URL (optional)</Label>
                     <Input id="thumbnail_url" name="thumbnail_url" type="url" placeholder="https://..." />
                   </div>
-                  <Button type="submit" className="w-full">Add Game</Button>
+                  <Button type="submit" className="w-full bg-gradient-maroon hover:opacity-90">Add Game</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -127,9 +127,9 @@ export default function Games() {
         </div>
 
         {games.length === 0 ? (
-          <Card className="bg-card/95 backdrop-blur-sm border-gold-500/20 text-center py-12">
+          <Card className="bg-card/95 backdrop-blur-sm border-maroon-accent/20 text-center py-12 shadow-md">
             <CardContent>
-              <Gamepad2 className="h-16 w-16 mx-auto mb-4 text-gold-500 opacity-50" />
+              <Gamepad2 className="h-16 w-16 mx-auto mb-4 text-maroon-accent opacity-50" />
               <p className="text-muted-foreground text-lg">No games available yet.</p>
               {isAdmin && <p className="text-sm text-muted-foreground mt-2">Add some games to get started!</p>}
             </CardContent>
@@ -137,7 +137,7 @@ export default function Games() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {games.map((game) => (
-              <Card key={game.id} className="bg-card/95 backdrop-blur-sm border-gold-500/20 hover:border-gold-500/40 hover:shadow-elegant transition-all duration-300 group">
+              <Card key={game.id} className="bg-gradient-card backdrop-blur-sm border-maroon-accent/20 hover:border-maroon-accent/40 hover:shadow-maroon transition-all duration-300 group">
                 {game.thumbnail_url && (
                   <div className="w-full h-48 overflow-hidden rounded-t-lg">
                     <img 
@@ -148,7 +148,7 @@ export default function Games() {
                   </div>
                 )}
                 <CardHeader>
-                  <CardTitle className="group-hover:text-gold-500 transition-colors">
+                  <CardTitle className="text-maroon-dark group-hover:text-maroon-accent transition-colors">
                     {game.title}
                   </CardTitle>
                   <CardDescription>{game.description}</CardDescription>
@@ -156,7 +156,7 @@ export default function Games() {
                 <CardContent>
                   <Button 
                     asChild 
-                    className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700"
+                    className="w-full bg-gradient-maroon hover:opacity-90"
                   >
                     <a href={game.url} target="_blank" rel="noopener noreferrer">
                       Play Now

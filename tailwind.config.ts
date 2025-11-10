@@ -57,26 +57,29 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        navy: {
-          dark: "hsl(var(--navy-dark))",
-          medium: "hsl(var(--navy-medium))",
-          light: "hsl(var(--navy-light))",
+        maroon: {
+          dark: "hsl(var(--maroon-dark))",
+          medium: "hsl(var(--maroon-medium))",
+          light: "hsl(var(--maroon-light))",
+          accent: "hsl(var(--maroon-accent))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          light: "hsl(var(--gold-light))",
+        grey: {
+          dark: "hsl(var(--grey-dark))",
+          medium: "hsl(var(--grey-medium))",
+          light: "hsl(var(--grey-light))",
         },
       },
       backgroundImage: {
         "gradient-primary": "var(--gradient-primary)",
-        "gradient-gold": "var(--gradient-gold)",
+        "gradient-maroon": "var(--gradient-maroon)",
         "gradient-hero": "var(--gradient-hero)",
+        "gradient-card": "var(--gradient-card)",
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',
         'md': 'var(--shadow-md)',
         'lg': 'var(--shadow-lg)',
-        'gold': 'var(--shadow-gold)',
+        'maroon': 'var(--shadow-maroon)',
       },
       borderRadius: {
         lg: "var(--radius)",
