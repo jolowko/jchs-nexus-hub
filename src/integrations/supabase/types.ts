@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          points_reward: number | null
           thumbnail_url: string | null
           title: string
           url: string
@@ -54,6 +55,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          points_reward?: number | null
           thumbnail_url?: string | null
           title: string
           url: string
@@ -62,6 +64,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          points_reward?: number | null
           thumbnail_url?: string | null
           title?: string
           url?: string
@@ -75,6 +78,7 @@ export type Database = {
           id: string
           image_url: string | null
           likes: number | null
+          points_required: number | null
           title: string
           user_id: string
         }
@@ -84,6 +88,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes?: number | null
+          points_required?: number | null
           title: string
           user_id: string
         }
@@ -93,6 +98,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           likes?: number | null
+          points_required?: number | null
           title?: string
           user_id?: string
         }
@@ -223,6 +229,7 @@ export type Database = {
           created_at: string | null
           id: string
           points: number | null
+          subscription_end_date: string | null
           subscription_id: string | null
           subscription_status: string | null
           updated_at: string | null
@@ -233,6 +240,7 @@ export type Database = {
           created_at?: string | null
           id: string
           points?: number | null
+          subscription_end_date?: string | null
           subscription_id?: string | null
           subscription_status?: string | null
           updated_at?: string | null
@@ -243,6 +251,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           points?: number | null
+          subscription_end_date?: string | null
           subscription_id?: string | null
           subscription_status?: string | null
           updated_at?: string | null
@@ -270,6 +279,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_unlocked_posts: {
+        Row: {
+          id: string
+          post_id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_unlocked_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "homework_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

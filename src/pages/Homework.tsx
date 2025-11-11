@@ -1,21 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import ChatWidget from "@/components/ChatWidget";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Heart, MessageCircle, Upload, X, Image as ImageIcon } from "lucide-react";
-import { z } from "zod";
-
-const homeworkSchema = z.object({
-  title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  description: z.string().trim().min(1, "Description is required").max(5000, "Description must be less than 5000 characters"),
-});
+import { Lock, Unlock, Upload, X, Heart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface HomeworkPost {
   id: string;
@@ -23,341 +19,333 @@ interface HomeworkPost {
   description: string;
   image_url: string | null;
   likes: number;
+  user_id: string;
   created_at: string;
+  points_required: number;
   profiles: {
     username: string;
+    avatar_url: string | null;
   };
 }
 
 export default function Homework() {
-  const { user, isSubscribed, loading } = useAuth();
+  const { user, profile, isSubscribed, loading } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<HomeworkPost[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [unlockedPosts, setUnlockedPosts] = useState<Set<string>>(new Set());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isSubscribed)) {
       navigate("/auth");
-    } else if (user && isSubscribed) {
-      fetchPosts();
     }
   }, [user, isSubscribed, loading, navigate]);
+
+  useEffect(() => {
+    if (user && isSubscribed) {
+      fetchPosts();
+      fetchUnlockedPosts();
+    }
+  }, [user, isSubscribed]);
 
   const fetchPosts = async () => {
     const { data, error } = await supabase
       .from("homework_posts")
-      .select("*, profiles:user_id(username)")
+      .select(`
+        *,
+        profiles!homework_posts_user_id_fkey(username, avatar_url)
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast.error("Failed to load posts");
-      return;
+      console.error("Error fetching posts:", error);
+    } else {
+      setPosts(data as any || []);
     }
-
-    setPosts(data as any);
   };
 
-  const handleImageSelect = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please select an image file");
-      return;
-    }
+  const fetchUnlockedPosts = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("user_unlocked_posts")
+      .select("post_id")
+      .eq("user_id", user.id);
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
-      return;
+    if (error) {
+      console.error("Error fetching unlocked posts:", error);
+    } else {
+      setUnlockedPosts(new Set(data?.map(u => u.post_id) || []));
     }
+  };
 
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleImageSelect(file);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user!.id}-${Date.now()}.${fileExt}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('homework-images')
-      .upload(fileName, file);
-
-    if (uploadError) {
-      toast.error("Failed to upload image");
-      return null;
-    }
-
-    const { data } = supabase.storage
-      .from('homework-images')
-      .getPublicUrl(fileName);
-
-    return data.publicUrl;
-  };
-
-  const createPost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
     if (!user) return;
 
-    const validation = homeworkSchema.safeParse({ title, description });
-    if (!validation.success) {
-      const errorMessage = validation.error.errors[0]?.message || "Invalid input";
-      toast.error(errorMessage);
-      return;
-    }
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const pointsRequired = parseInt(formData.get("points_required") as string) || 0;
 
-    setUploading(true);
+    try {
+      let imageUrl = null;
 
-    let imageUrl = null;
-    if (imageFile) {
-      imageUrl = await uploadImage(imageFile);
-      if (!imageUrl) {
-        setUploading(false);
-        return;
+      if (image) {
+        const fileExt = image.name.split('.').pop();
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('homework-images')
+          .upload(filePath, image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('homework-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
       }
-    }
 
-    const { error } = await supabase
-      .from("homework_posts")
-      .insert({
-        user_id: user.id,
-        title: validation.data.title,
-        description: validation.data.description,
+      const { error } = await supabase.from("homework_posts").insert({
+        title,
+        description,
         image_url: imageUrl,
+        user_id: user.id,
+        points_required: pointsRequired,
       });
 
-    setUploading(false);
+      if (error) throw error;
 
-    if (error) {
+      toast.success("Post created successfully!");
+      setImage(null);
+      setImagePreview(null);
+      setIsDialogOpen(false);
+      fetchPosts();
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error creating post:", error);
       toast.error("Failed to create post");
+    }
+  };
+
+  const unlockPost = async (postId: string, points: number) => {
+    if (!user || !profile) return;
+
+    if (profile.points < points) {
+      toast.error("Not enough points!");
       return;
     }
 
-    toast.success("Post created!");
-    setTitle("");
-    setDescription("");
-    setImageFile(null);
-    setImagePreview(null);
-    setShowCreateForm(false);
-    fetchPosts();
-  };
+    try {
+      const { error: pointsError } = await supabase
+        .from("profiles")
+        .update({ points: profile.points - points })
+        .eq("id", user.id);
 
-  const likePost = async (postId: string) => {
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
+      if (pointsError) throw pointsError;
 
-    const { error } = await supabase
-      .from("homework_posts")
-      .update({ likes: post.likes + 1 })
-      .eq("id", postId);
+      const { error: unlockError } = await supabase
+        .from("user_unlocked_posts")
+        .insert({ user_id: user.id, post_id: postId });
 
-    if (error) {
-      toast.error("Failed to like post");
-      return;
+      if (unlockError) throw unlockError;
+
+      toast.success(`Post unlocked for ${points} points!`);
+      setUnlockedPosts(prev => new Set([...prev, postId]));
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      console.error("Error unlocking post:", error);
+      toast.error("Failed to unlock post");
     }
-
-    fetchPosts();
   };
 
-  if (loading || !user || !isSubscribed) {
-    return null;
-  }
+  const isPostUnlocked = (post: HomeworkPost) => {
+    return post.user_id === user?.id || 
+           post.points_required === 0 || 
+           unlockedPosts.has(post.id);
+  };
+
+  if (loading || !user || !isSubscribed) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-grey-light via-background to-maroon-light/20">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
               Homework Hub
             </h1>
-            <p className="text-muted-foreground">Share and collaborate on assignments</p>
+            <p className="text-muted-foreground">Share and discover homework help</p>
           </div>
-          <Button 
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="bg-gradient-maroon hover:opacity-90 shadow-maroon"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            New Post
-          </Button>
-        </div>
-
-        {showCreateForm && (
-          <Card className="mb-6 border-maroon-accent/20 shadow-md">
-            <CardHeader className="bg-gradient-card">
-              <CardTitle>Create Homework Post</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={createPost} className="space-y-4">
-                <Input
-                  placeholder="Title (max 200 characters)"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={200}
-                  required
-                  className="border-maroon-accent/20 focus:border-maroon-accent"
-                />
-                <Textarea
-                  placeholder="Description (max 5000 characters)"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={5000}
-                  required
-                  rows={4}
-                  className="border-maroon-accent/20 focus:border-maroon-accent"
-                />
-                
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-maroon hover:opacity-90 shadow-maroon">
+                <Upload className="mr-2 h-4 w-4" />
+                Create Post
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-maroon-accent/20">
+              <DialogHeader>
+                <DialogTitle>Create Homework Post</DialogTitle>
+                <DialogDescription>Share your homework with the community</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input id="title" name="title" required className="bg-background" />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" name="description" required className="bg-background" />
+                </div>
+                <div>
+                  <Label htmlFor="points_required">Points Required (0 for free)</Label>
+                  <Input 
+                    id="points_required" 
+                    name="points_required" 
+                    type="number" 
+                    defaultValue="0" 
+                    min="0" 
+                    className="bg-background"
+                  />
+                </div>
                 <div
                   onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                    isDragging 
-                      ? 'border-maroon-accent bg-maroon-light/30' 
-                      : 'border-border hover:border-maroon-accent/50'
-                  }`}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
                 >
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Drag and drop an image here, or click to select
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        Select Image
-                      </Button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleImageSelect(file);
-                        }}
-                      />
-                    </div>
-                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    {imagePreview ? (
+                      <div className="relative inline-block">
+                        <img src={imagePreview} alt="Preview" className="max-h-48 rounded" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setImage(null);
+                            setImagePreview(null);
+                          }}
+                          className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        <Upload className="mx-auto h-12 w-12 mb-2" />
+                        <p>Drop image here or click to upload</p>
+                      </div>
+                    )}
+                  </label>
                 </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
-                    disabled={uploading}
-                    className="bg-gradient-maroon hover:opacity-90"
-                  >
-                    {uploading ? "Posting..." : "Post"}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+                <Button type="submit" className="w-full bg-gradient-maroon hover:opacity-90">Create Post</Button>
               </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {posts.length === 0 ? (
+          <Card className="bg-card backdrop-blur-sm border-border text-center py-12 shadow-md">
+            <CardContent>
+              <p className="text-muted-foreground text-lg">No posts yet. Be the first to share!</p>
             </CardContent>
           </Card>
+        ) : (
+          <div className="grid gap-6">
+            {posts.map((post) => {
+              const unlocked = isPostUnlocked(post);
+              
+              return (
+                <Card key={post.id} className="bg-card border-border hover:shadow-maroon transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-foreground">{post.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">by {post.profiles.username}</p>
+                      </div>
+                      
+                      {!unlocked && post.points_required > 0 && (
+                        <Button
+                          onClick={() => unlockPost(post.id, post.points_required)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <Lock className="h-4 w-4" />
+                          Unlock ({post.points_required} pts)
+                        </Button>
+                      )}
+                      
+                      {unlocked && post.points_required > 0 && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Unlock className="h-4 w-4" />
+                          Unlocked
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {unlocked ? (
+                      <>
+                        <p className="mb-4 text-foreground">{post.description}</p>
+                        {post.image_url && (
+                          <img 
+                            src={post.image_url} 
+                            alt={post.title}
+                            className="max-w-full h-auto rounded-lg"
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Lock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>This post requires {post.points_required} points to unlock</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
-
-        <div className="grid gap-6">
-          {posts.map((post) => (
-            <Card key={post.id} className="border-maroon-accent/20 shadow-md hover:shadow-maroon transition-shadow">
-              <CardHeader className="bg-gradient-card">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-maroon-dark">{post.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      by {post.profiles?.username || "Anonymous"}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => likePost(post.id)}
-                      className="hover:text-maroon-accent"
-                    >
-                      <Heart className="h-4 w-4 mr-1" />
-                      {post.likes}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="hover:text-maroon-accent">
-                      <MessageCircle className="h-4 w-4 mr-1" />
-                      Reply
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                {post.image_url && (
-                  <img 
-                    src={post.image_url} 
-                    alt="Homework" 
-                    className="w-full max-h-96 object-contain rounded-lg mb-4 border border-border"
-                  />
-                )}
-                <p className="text-sm">{post.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </main>
-
       <ChatWidget />
     </div>
   );

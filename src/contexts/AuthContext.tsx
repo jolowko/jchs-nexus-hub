@@ -11,6 +11,7 @@ interface Profile {
   points: number;
   subscription_status: string;
   subscription_id: string | null;
+  subscription_end_date: string | null;
 }
 
 interface AuthContextType {
