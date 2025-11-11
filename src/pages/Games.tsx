@@ -21,6 +21,7 @@ interface Game {
   thumbnail_url?: string;
   points_reward: number;
   created_at: string;
+  embed_code?: string;
 }
 
 export default function Games() {
@@ -29,6 +30,7 @@ export default function Games() {
   const [games, setGames] = useState<Game[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [playedGames, setPlayedGames] = useState<Set<string>>(new Set());
+  const [playingGame, setPlayingGame] = useState<Game | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isSubscribed)) {
@@ -63,9 +65,10 @@ export default function Games() {
     const { error } = await supabase.from("games").insert({
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      url: formData.get("url") as string,
+      url: formData.get("url") as string || null,
       thumbnail_url: formData.get("thumbnail_url") as string || null,
       points_reward: parseInt(formData.get("points_reward") as string) || 10,
+      embed_code: formData.get("embed_code") as string || null,
     });
 
     if (error) {
@@ -79,29 +82,34 @@ export default function Games() {
     e.currentTarget.reset();
   };
 
-  const handlePlayGame = async (gameId: string, gameUrl: string, pointsReward: number) => {
-    if (!user || !profile || playedGames.has(gameId)) {
-      window.open(gameUrl, '_blank');
-      return;
+  const handlePlayGame = async (game: Game) => {
+    if (!user || !profile) return;
+
+    // Award points if not played yet
+    if (!playedGames.has(game.id)) {
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ points: profile.points + game.points_reward })
+          .eq("id", user.id);
+
+        if (error) throw error;
+
+        setPlayedGames(prev => new Set([...prev, game.id]));
+        toast.success(`You earned ${game.points_reward} points!`);
+        
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (error) {
+        console.error("Error awarding points:", error);
+        toast.error("Failed to award points");
+      }
     }
 
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ points: profile.points + pointsReward })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      setPlayedGames(prev => new Set([...prev, gameId]));
-      toast.success(`You earned ${pointsReward} points!`);
-      window.open(gameUrl, '_blank');
-      
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      console.error("Error awarding points:", error);
-      toast.error("Failed to award points");
-      window.open(gameUrl, '_blank');
+    // Open game (embedded or external)
+    if (game.embed_code) {
+      setPlayingGame(game);
+    } else if (game.url) {
+      window.open(game.url, '_blank');
     }
   };
 
@@ -141,8 +149,12 @@ export default function Games() {
                     <Textarea id="description" name="description" required className="bg-background" />
                   </div>
                   <div>
-                    <Label htmlFor="url">Game URL</Label>
-                    <Input id="url" name="url" type="url" required placeholder="https://..." className="bg-background" />
+                    <Label htmlFor="url">Game URL (if external link)</Label>
+                    <Input id="url" name="url" type="url" placeholder="https://..." className="bg-background" />
+                  </div>
+                  <div>
+                    <Label htmlFor="embed_code">Embed Code (if embedded game)</Label>
+                    <Textarea id="embed_code" name="embed_code" placeholder="<iframe src='...'></iframe>" className="bg-background" rows={3} />
                   </div>
                   <div>
                     <Label htmlFor="thumbnail_url">Thumbnail URL (optional)</Label>
@@ -192,12 +204,12 @@ export default function Games() {
                     <span>Earn {game.points_reward} points</span>
                   </div>
                   <Button 
-                    onClick={() => handlePlayGame(game.id, game.url, game.points_reward)}
+                    onClick={() => handlePlayGame(game)}
                     className="w-full bg-gradient-maroon hover:opacity-90"
                     disabled={playedGames.has(game.id)}
                   >
                     {playedGames.has(game.id) ? "Played" : "Play Now"}
-                    <ExternalLink className="ml-2 h-4 w-4" />
+                    {game.embed_code ? <Gamepad2 className="ml-2 h-4 w-4" /> : <ExternalLink className="ml-2 h-4 w-4" />}
                   </Button>
                 </CardContent>
               </Card>
@@ -206,6 +218,21 @@ export default function Games() {
         )}
       </main>
       <ChatWidget />
+
+      {playingGame && playingGame.embed_code && (
+        <Dialog open={!!playingGame} onOpenChange={() => setPlayingGame(null)}>
+          <DialogContent className="max-w-4xl h-[80vh] bg-card border-maroon-accent/20">
+            <DialogHeader>
+              <DialogTitle>{playingGame.title}</DialogTitle>
+              <DialogDescription>{playingGame.description}</DialogDescription>
+            </DialogHeader>
+            <div 
+              className="w-full h-full rounded-lg overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: playingGame.embed_code }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

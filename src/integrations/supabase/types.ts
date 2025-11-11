@@ -41,10 +41,32 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_images: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       games: {
         Row: {
           created_at: string
           description: string
+          embed_code: string | null
           id: string
           points_reward: number | null
           thumbnail_url: string | null
@@ -54,6 +76,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          embed_code?: string | null
           id?: string
           points_reward?: number | null
           thumbnail_url?: string | null
@@ -63,6 +86,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          embed_code?: string | null
           id?: string
           points_reward?: number | null
           thumbnail_url?: string | null

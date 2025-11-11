@@ -1,15 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import ChatWidget from "@/components/ChatWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Brain, Gamepad2, ShoppingBag, Trophy, MessageSquare } from "lucide-react";
+import { BookOpen, Brain, Gamepad2, ShoppingBag, Trophy, MessageSquare, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const { user, isSubscribed, loading } = useAuth();
+  const { user, isSubscribed, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [featuredImage, setFeaturedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -20,6 +26,77 @@ export default function Dashboard() {
       }
     }
   }, [user, isSubscribed, loading, navigate]);
+
+  useEffect(() => {
+    if (user && isSubscribed) {
+      fetchFeaturedImage();
+    }
+  }, [user, isSubscribed]);
+
+  const fetchFeaturedImage = async () => {
+    const { data, error } = await supabase
+      .from("featured_images")
+      .select("image_url")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error fetching featured image:", error);
+    } else if (data) {
+      setFeaturedImage(data.image_url);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `featured/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('homework-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('homework-images')
+        .getPublicUrl(filePath);
+
+      // Delete old featured image
+      if (featuredImage) {
+        const { data: oldImages } = await supabase
+          .from("featured_images")
+          .select("id");
+        
+        if (oldImages && oldImages.length > 0) {
+          await supabase
+            .from("featured_images")
+            .delete()
+            .in('id', oldImages.map(img => img.id));
+        }
+      }
+
+      // Insert new featured image
+      const { error: insertError } = await supabase
+        .from("featured_images")
+        .insert({ image_url: publicUrl });
+
+      if (insertError) throw insertError;
+
+      setFeaturedImage(publicUrl);
+      toast.success("Featured image updated!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   if (loading || !user || !isSubscribed) {
     return null;
@@ -34,7 +111,7 @@ export default function Dashboard() {
       color: "text-blue-500",
     },
     {
-      title: "AI Helper",
+      title: "Helper",
       description: "Get instant homework help",
       icon: Brain,
       to: "/ai-helper",
@@ -83,6 +160,70 @@ export default function Dashboard() {
             Your premium school platform for collaboration and growth
           </p>
         </div>
+
+        {featuredImage && (
+          <div className="mb-8 relative rounded-xl overflow-hidden shadow-maroon animate-fade-in">
+            <img 
+              src={featuredImage} 
+              alt="Featured" 
+              className="w-full h-64 md:h-96 object-cover"
+            />
+            {isAdmin && (
+              <div className="absolute top-4 right-4">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  className="hidden"
+                  id="featured-upload"
+                />
+                <label htmlFor="featured-upload">
+                  <Button 
+                    className="bg-gradient-maroon hover:opacity-90 cursor-pointer"
+                    disabled={uploadingImage}
+                    asChild
+                  >
+                    <span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploadingImage ? "Uploading..." : "Change Image"}
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!featuredImage && isAdmin && (
+          <Card className="mb-8 bg-card border-maroon-accent/20 animate-fade-in">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-muted-foreground mb-4">Add a featured image to personalize your homepage</p>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  className="hidden"
+                  id="featured-upload-empty"
+                />
+                <label htmlFor="featured-upload-empty">
+                  <Button 
+                    className="bg-gradient-maroon hover:opacity-90 cursor-pointer"
+                    disabled={uploadingImage}
+                    asChild
+                  >
+                    <span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploadingImage ? "Uploading..." : "Upload Featured Image"}
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {

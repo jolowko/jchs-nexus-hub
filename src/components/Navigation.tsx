@@ -11,7 +11,7 @@ export default function Navigation() {
     { to: "/", label: "Home", icon: Home },
     { to: "/chat", label: "Chat", icon: MessageSquare },
     { to: "/homework", label: "Homework", icon: BookOpen },
-    { to: "/ai-helper", label: "AI Helper", icon: Brain },
+    { to: "/ai-helper", label: "Helper", icon: Brain },
     { to: "/games", label: "Games", icon: Gamepad2 },
     { to: "/merch", label: "Merch", icon: ShoppingBag },
     { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
