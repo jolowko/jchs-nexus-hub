@@ -118,10 +118,10 @@ export default function Dashboard() {
       color: "text-purple-500",
     },
     {
-      title: "Games",
+      title: "Fun",
       description: "Take a break and play",
       icon: Gamepad2,
-      to: "/games",
+      to: "/fun",
       color: "text-green-500",
     },
     {
