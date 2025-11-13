@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { GraduationCap, Home, MessageSquare, BookOpen, Brain, Gamepad2, ShoppingBag, Trophy, Settings, Shield } from "lucide-react";
+import { GraduationCap, Home, MessageSquare, BookOpen, Brain, Gamepad2, Music, ShoppingBag, Trophy, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 import AnimatedBanner from "./AnimatedBanner";
@@ -15,6 +15,7 @@ export default function Navigation() {
     { to: "/homework", label: "Homework", icon: BookOpen },
     { to: "/ai-helper", label: "Helper", icon: Brain },
     { to: "/fun", label: "Fun", icon: Gamepad2 },
+    { to: "/music", label: "Music", icon: Music },
     { to: "/merch", label: "Merch", icon: ShoppingBag },
     { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { to: "/profile", label: "Profile", icon: Settings },

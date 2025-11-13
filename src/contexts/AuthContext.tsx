@@ -12,6 +12,7 @@ interface Profile {
   subscription_status: string;
   subscription_id: string | null;
   subscription_end_date: string | null;
+  music_service?: string | null;
 }
 
 interface AuthContextType {

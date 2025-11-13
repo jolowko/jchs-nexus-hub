@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import ChatWidget from "@/components/ChatWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Brain, Gamepad2, ShoppingBag, Trophy, MessageSquare, Upload } from "lucide-react";
+import { BookOpen, Brain, Gamepad2, Music, ShoppingBag, Trophy, MessageSquare, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -123,6 +123,13 @@ export default function Dashboard() {
       icon: Gamepad2,
       to: "/fun",
       color: "text-green-500",
+    },
+    {
+      title: "Music Hub",
+      description: "Share and discover music",
+      icon: Music,
+      to: "/music",
+      color: "text-purple-400",
     },
     {
       title: "Merch Store",
