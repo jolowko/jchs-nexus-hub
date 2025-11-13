@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Subscription from "./pages/Subscription";
 import Homework from "./pages/Homework";
 import AIHelper from "./pages/AIHelper";
-import Games from "./pages/Games";
+import Fun from "./pages/Fun";
 import Merch from "./pages/Merch";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
@@ -32,7 +32,7 @@ const App = () => (
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/homework" element={<Homework />} />
             <Route path="/ai-helper" element={<AIHelper />} />
-            <Route path="/games" element={<Games />} />
+            <Route path="/fun" element={<Fun />} />
             <Route path="/merch" element={<Merch />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/profile" element={<Profile />} />

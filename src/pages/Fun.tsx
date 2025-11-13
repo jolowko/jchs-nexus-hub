@@ -24,7 +24,7 @@ interface Game {
   embed_code?: string;
 }
 
-export default function Games() {
+export default function Fun() {
   const { user, profile, isSubscribed, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
@@ -51,7 +51,7 @@ export default function Games() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching games:", error);
+      console.error("Error fetching activities:", error);
       return;
     }
 
@@ -72,11 +72,11 @@ export default function Games() {
     });
 
     if (error) {
-      toast.error("Failed to add game");
+      toast.error("Failed to add activity");
       return;
     }
 
-    toast.success("Game added successfully!");
+    toast.success("Activity added successfully!");
     setIsDialogOpen(false);
     fetchGames();
     e.currentTarget.reset();
@@ -105,7 +105,7 @@ export default function Games() {
       }
     }
 
-    // Open game (embedded or external)
+    // Open activity (embedded or external)
     if (game.embed_code) {
       setPlayingGame(game);
     } else if (game.url) {
@@ -122,7 +122,7 @@ export default function Games() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-              Games Hub
+              Fun Hub
             </h1>
             <p className="text-muted-foreground">Take a break and have some fun</p>
           </div>
@@ -131,17 +131,17 @@ export default function Games() {
               <DialogTrigger asChild>
                 <Button className="bg-gradient-maroon hover:opacity-90 shadow-maroon">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Game
+                  Add Activity
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-card border-maroon-accent/20">
                 <DialogHeader>
-                  <DialogTitle>Add New Game</DialogTitle>
-                  <DialogDescription>Add a new game to the hub</DialogDescription>
+                  <DialogTitle>Add New Activity</DialogTitle>
+                  <DialogDescription>Add a new activity to the hub</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleAddGame} className="space-y-4">
                   <div>
-                    <Label htmlFor="title">Game Title</Label>
+                    <Label htmlFor="title">Activity Title</Label>
                     <Input id="title" name="title" required className="bg-background" />
                   </div>
                   <div>
@@ -149,11 +149,11 @@ export default function Games() {
                     <Textarea id="description" name="description" required className="bg-background" />
                   </div>
                   <div>
-                    <Label htmlFor="url">Game URL (if external link)</Label>
+                    <Label htmlFor="url">Activity URL (if external link)</Label>
                     <Input id="url" name="url" type="url" placeholder="https://..." className="bg-background" />
                   </div>
                   <div>
-                    <Label htmlFor="embed_code">Embed Code (if embedded game)</Label>
+                    <Label htmlFor="embed_code">Embed Code (if embedded activity)</Label>
                     <Textarea id="embed_code" name="embed_code" placeholder="<iframe src='...'></iframe>" className="bg-background" rows={3} />
                   </div>
                   <div>
@@ -164,7 +164,7 @@ export default function Games() {
                     <Label htmlFor="points_reward">Points Reward</Label>
                     <Input id="points_reward" name="points_reward" type="number" defaultValue="10" min="1" className="bg-background" />
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-maroon hover:opacity-90">Add Game</Button>
+                  <Button type="submit" className="w-full bg-gradient-maroon hover:opacity-90">Add Activity</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -175,8 +175,8 @@ export default function Games() {
           <Card className="bg-card backdrop-blur-sm border-border text-center py-12 shadow-md">
             <CardContent>
               <Gamepad2 className="h-16 w-16 mx-auto mb-4 text-maroon-accent opacity-50" />
-              <p className="text-muted-foreground text-lg">No games available yet.</p>
-              {isAdmin && <p className="text-sm text-muted-foreground mt-2">Add some games to get started!</p>}
+              <p className="text-muted-foreground text-lg">No activities available yet.</p>
+              {isAdmin && <p className="text-sm text-muted-foreground mt-2">Add some activities to get started!</p>}
             </CardContent>
           </Card>
         ) : (

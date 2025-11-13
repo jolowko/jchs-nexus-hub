@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { GraduationCap, Home, MessageSquare, BookOpen, Brain, Gamepad2, ShoppingBag, Trophy, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+import AnimatedBanner from "./AnimatedBanner";
+
 export default function Navigation() {
   const location = useLocation();
   const { isAdmin } = useAuth();
@@ -12,7 +14,7 @@ export default function Navigation() {
     { to: "/chat", label: "Chat", icon: MessageSquare },
     { to: "/homework", label: "Homework", icon: BookOpen },
     { to: "/ai-helper", label: "Helper", icon: Brain },
-    { to: "/games", label: "Games", icon: Gamepad2 },
+    { to: "/fun", label: "Fun", icon: Gamepad2 },
     { to: "/merch", label: "Merch", icon: ShoppingBag },
     { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { to: "/profile", label: "Profile", icon: Settings },
@@ -23,8 +25,10 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="border-b bg-card shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4">
+    <>
+      <AnimatedBanner />
+      <nav className="border-b bg-card shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
             <GraduationCap className="h-6 w-6 text-accent" />
@@ -60,5 +64,6 @@ export default function Navigation() {
         </div>
       </div>
     </nav>
+    </>
   );
 }
