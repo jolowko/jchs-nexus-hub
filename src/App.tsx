@@ -10,6 +10,7 @@ import Subscription from "./pages/Subscription";
 import Homework from "./pages/Homework";
 import AIHelper from "./pages/AIHelper";
 import Fun from "./pages/Fun";
+import Music from "./pages/Music";
 import Merch from "./pages/Merch";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/homework" element={<Homework />} />
             <Route path="/ai-helper" element={<AIHelper />} />
             <Route path="/fun" element={<Fun />} />
+            <Route path="/music" element={<Music />} />
             <Route path="/merch" element={<Merch />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/profile" element={<Profile />} />
