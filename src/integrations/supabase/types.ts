@@ -247,11 +247,42 @@ export type Database = {
         }
         Relationships: []
       }
+      music_embeds: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          embed_url: string
+          id: string
+          service: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          embed_url: string
+          id?: string
+          service: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          embed_url?: string
+          id?: string
+          service?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           id: string
+          music_service: string | null
           points: number | null
           subscription_end_date: string | null
           subscription_id: string | null
@@ -263,6 +294,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id: string
+          music_service?: string | null
           points?: number | null
           subscription_end_date?: string | null
           subscription_id?: string | null
@@ -274,6 +306,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           id?: string
+          music_service?: string | null
           points?: number | null
           subscription_end_date?: string | null
           subscription_id?: string | null
